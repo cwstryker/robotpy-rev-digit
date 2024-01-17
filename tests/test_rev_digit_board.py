@@ -1,19 +1,20 @@
-from robotpy_rev_digit.rev_digit_board import RevDigitBoard
-import wpilib
-from wpilib.simulation import DIOSim, AnalogInputSim
 import pytest
+import wpilib
+from wpilib.simulation import AnalogInputSim, DIOSim
+
+from robotpy_rev_digit.rev_digit_board import RevDigitBoard
 
 
 class I2CSim:
     def __init__(self, i2c_obj: wpilib.I2C):
-        self._buffer = []
+        self._buffer: list[bytes] = []
         self._i2c_obj = i2c_obj
 
-    def writeBulk(self, array: bytearray):
+    def writeBulk(self, array: bytes):
         self._buffer.append(array)
 
     @property
-    def buffer(self) -> list[bytearray]:
+    def buffer(self) -> list[bytes]:
         return self._buffer
 
 
