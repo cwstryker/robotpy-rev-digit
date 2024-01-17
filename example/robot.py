@@ -4,6 +4,8 @@ from robotpy_rev_digit import RevDigitBoard
 
 I2C_DEV_ADDR = 0x70
 
+CHAR_MAP = {"A": b"\xF7\x00", "B": b"\x8F\x12", "C": b"\x39\x00", "D": b"\x0F\x12"}
+
 
 class MyRobot(wpilib.TimedRobot):
     def robotInit(self):
@@ -11,8 +13,8 @@ class MyRobot(wpilib.TimedRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
-        # self.i2c = wpilib.I2C(wpilib.I2C.Port.kMXP, I2C_DEV_ADDR)
         self.display = RevDigitBoard()
+        self.timer = wpilib.Timer()
 
     def autonomousInit(self):
         """This function is run once each time the robot enters autonomous mode."""
@@ -24,21 +26,15 @@ class MyRobot(wpilib.TimedRobot):
 
     def teleopInit(self):
         """This function is called periodically during operator control."""
-        buf = bytearray(
-            [
-                0x0F,
-                0x0F,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xFF,
-                0xFF,
-                0xFF,
-                0xFF,
-            ]
-        )
-        self.display._i2c.writeBulk(buf)
+        self.timer.start()
+
+    def teleopPeriodic(self):
+        """This function is called periodically during autonomous."""
+        self.display.display_message(self.timer.get())
+
+    def teleopExit(self):
+        """This function is called when teleop ends."""
+        self.timer.stop()
 
 
 if __name__ == "__main__":

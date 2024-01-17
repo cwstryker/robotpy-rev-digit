@@ -2,7 +2,11 @@ import pytest
 import wpilib
 from wpilib.simulation import AnalogInputSim, DIOSim
 
-from robotpy_rev_digit.rev_digit_board import RevDigitBoard
+from robotpy_rev_digit.rev_digit_board import (
+    RevDigitBoard,
+    format_float,
+    format_string,
+)
 
 
 class I2CSim:
@@ -82,3 +86,76 @@ def test_RevDigit_display_init():
     ]
     for actual, expected in zip(digit._i2c.buffer, expected_packets):
         assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        ("A", b"\x0F\x0F\xF7\x00\x00\x00\x00\x00\x00\x00"),
+        (0, b"\x0F\x0F\x3F\x00\x00\x00\x00\x00\x00\x00"),
+        (0.1, b"\x0F\x0F\x06\x00\x3F\x40\x00\x00\x00\x00"),
+    ],
+)
+def test_RevDigit_write_message(test_input, expected):
+    """Test that display can display message"""
+    digit = RevDigitBoard()
+    digit._i2c = I2CSim(i2c_obj=digit._i2c)  # Use a simulated I2C interface
+    digit.display_message(test_input)
+    actual = digit._i2c.buffer[0]  # look at the first item in the buffer
+    assert actual == expected
+
+
+@pytest.mark.skip(reason="Deprecated")
+def test_RevDigit_format_pad_message():
+    assert format_pad_message("A") == "   A"
+    assert format_pad_message("AB") == "  AB"
+    assert format_pad_message("ABC") == " ABC"
+    assert format_pad_message("ABCD") == "ABCD"
+    assert format_pad_message("ABCDE") == "ABCD"
+    assert format_pad_message("ABC.DE") == "ABC.D"
+    assert format_pad_message(1.1) == "  1.1"
+    assert format_pad_message(-1.1) == " -1.1"
+    assert format_pad_message(15.0) == " 15.0"
+    assert format_pad_message(-15.0) == "-15.0"
+    assert format_pad_message(-15.04) == "-15.0"
+    assert format_pad_message(-15.05) == "-15.1"
+    assert format_pad_message(999.9) == "999.9"
+    assert format_pad_message(-99.9) == "-99.9"
+    assert format_pad_message(1000.0) == "####"
+    assert format_pad_message(-100.0) == "####"
+    assert format_pad_message(3) == "   3"
+    assert format_pad_message(-100) == "-100"
+    assert format_pad_message(-1000) == "-100"
+
+
+@pytest.mark.parametrize(
+    "test_input, expected",
+    [
+        (1.1, "  1.1"),
+        (-1.1, " -1.1"),
+        (15.0, " 15.0"),
+        (-15.0, "-15.0"),
+        (-15.04, "-15.0"),
+        (-15.05, "-15.1"),
+        (999.9, "999.9"),
+        (-99.9, "-99.9"),
+        (1000.0, "####"),
+        (-100.0, "####"),
+    ],
+)
+def test_RevDigit_format_float(test_input, expected):
+    assert format_float(test_input) == expected
+
+
+@pytest.mark.parametrize(
+    "test_input, expected",
+    [
+        ("A", "   A"),
+        ("AB", "  AB"),
+        ("ABC", " ABC"),
+        ("ABCD", "ABCD"),
+        ("A.", "  A."),
+    ],
+)
+def test_RevDigit_format_string(test_input, expected):
+    assert format_string(test_input) == expected
