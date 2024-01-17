@@ -1,4 +1,5 @@
 import wpilib
+
 from robotpy_rev_digit import RevDigitBoard
 
 I2C_DEV_ADDR = 0x70
