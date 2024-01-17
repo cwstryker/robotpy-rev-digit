@@ -159,10 +159,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
+# Robotpy stuff
+.wpilib/
+
 # Other stuff
 **/simgui-ds.json
 **/simgui-window.json
 **/simgui.json
-Larry/simgui-window.json
-Larry/simgui-ds.json
-Larry/simgui.json

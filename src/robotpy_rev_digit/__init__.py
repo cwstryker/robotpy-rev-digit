@@ -1,3 +1,3 @@
-# SPDX-FileCopyrightText: 2024-present Chadwick Stryker <chadwick@stryker5.org>
-#
-# SPDX-License-Identifier: MIT
+from robotpy_rev_digit.rev_digit_board import RevDigitBoard
+
+__all__ = ["RevDigitBoard"]
