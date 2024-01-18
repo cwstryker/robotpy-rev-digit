@@ -2,11 +2,8 @@ import pytest
 import wpilib
 from wpilib.simulation import AnalogInputSim, DIOSim
 
-from robotpy_rev_digit.rev_digit_board import (
-    RevDigitBoard,
-    format_float,
-    format_string,
-)
+from robotpy_rev_digit.rev_digit_board import (RevDigitBoard, format_float,
+                                               format_string)
 
 
 class I2CSim:
@@ -36,10 +33,10 @@ def test_RevDigit_Instance():
 def test_RevDigit_button_a(state):
     """Test reading the state of Button A"""
     digit = RevDigitBoard()
-    digit._button_a = DIOSim(input=digit._button_a)
-    digit._button_b = DIOSim(input=digit._button_b)
-    digit._button_a.setValue(state)
-    digit._button_b.setValue(not state)
+    button_a = DIOSim(input=digit._button_a)
+    button_b = DIOSim(input=digit._button_b)
+    button_a.setValue(state)
+    button_b.setValue(not state)
     assert digit.button_a is state
 
 
@@ -47,10 +44,10 @@ def test_RevDigit_button_a(state):
 def test_RevDigit_button_b(state):
     """Test reading the state of Button B"""
     digit = RevDigitBoard()
-    digit._button_a = DIOSim(input=digit._button_a)
-    digit._button_b = DIOSim(input=digit._button_b)
-    digit._button_a.setValue(not state)
-    digit._button_b.setValue(state)
+    button_a = DIOSim(input=digit._button_a)
+    button_b = DIOSim(input=digit._button_b)
+    button_a.setValue(not state)
+    button_b.setValue(state)
     assert digit.button_b is state
 
 
@@ -58,8 +55,8 @@ def test_RevDigit_button_b(state):
 def test_RevDigit_potentiometer(voltage):
     """Test reading the state of the potentiometer sensor"""
     digit = RevDigitBoard()
-    digit._potentiometer = AnalogInputSim(analogInput=digit._potentiometer)
-    digit._potentiometer.setVoltage(voltage)
+    potentiometer = AnalogInputSim(analogInput=digit._potentiometer)
+    potentiometer.setVoltage(voltage)
     assert digit.potentiometer == voltage
 
 
@@ -105,29 +102,6 @@ def test_RevDigit_write_message(test_input, expected):
     assert actual == expected
 
 
-@pytest.mark.skip(reason="Deprecated")
-def test_RevDigit_format_pad_message():
-    assert format_pad_message("A") == "   A"
-    assert format_pad_message("AB") == "  AB"
-    assert format_pad_message("ABC") == " ABC"
-    assert format_pad_message("ABCD") == "ABCD"
-    assert format_pad_message("ABCDE") == "ABCD"
-    assert format_pad_message("ABC.DE") == "ABC.D"
-    assert format_pad_message(1.1) == "  1.1"
-    assert format_pad_message(-1.1) == " -1.1"
-    assert format_pad_message(15.0) == " 15.0"
-    assert format_pad_message(-15.0) == "-15.0"
-    assert format_pad_message(-15.04) == "-15.0"
-    assert format_pad_message(-15.05) == "-15.1"
-    assert format_pad_message(999.9) == "999.9"
-    assert format_pad_message(-99.9) == "-99.9"
-    assert format_pad_message(1000.0) == "####"
-    assert format_pad_message(-100.0) == "####"
-    assert format_pad_message(3) == "   3"
-    assert format_pad_message(-100) == "-100"
-    assert format_pad_message(-1000) == "-100"
-
-
 @pytest.mark.parametrize(
     "test_input, expected",
     [
@@ -155,6 +129,7 @@ def test_RevDigit_format_float(test_input, expected):
         ("ABC", " ABC"),
         ("ABCD", "ABCD"),
         ("A.", "  A."),
+        ("a", "   A"),
     ],
 )
 def test_RevDigit_format_string(test_input, expected):

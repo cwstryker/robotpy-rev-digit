@@ -1,7 +1,11 @@
 # RobotPy Rev Digit
 
-[![PyPI - Version](https://img.shields.io/pypi/v/robotpy-rev-digit.svg)](https://pypi.org/project/robotpy-rev-digit)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/robotpy-rev-digit.svg)](https://pypi.org/project/robotpy-rev-digit)
+[![python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
+
+A RobotPy module for control of the REV Robotics Digit Board.
+Ported from the Java repository: https://github.com/vampjaz/REVDigitBoard
 
 -----
 
