@@ -1,35 +1,44 @@
-import wpilib
+import inspect
 
-from robotpy_rev_digit import RevDigitBoard
+import robotpy_rev_digit
+import wpilib
 
 I2C_DEV_ADDR = 0x70
 TEST_PATTERN = "   ABCDEFGHIJKLMNOPQRSTUVWXYZ*?@#   "
 
 
 class MyRobot(wpilib.TimedRobot):
+
+    """
+    ##########################################################################
+    RevDigitBoard Example Program
+    This program is an example of how to use the RevDigitBoard class.
+    """
+
     def robotInit(self):
         """
-        This function is called upon program startup and
-        should be used for any initialization code.
+        This function is called upon program startup and should be used for any
+        initialization code.
         """
-        self.rev_digit = RevDigitBoard()
+        # Display information about this robot program on the driver station console
+        print(inspect.getdoc(self))
+        print(f"robotpy_rev_digit version: {robotpy_rev_digit.__version__}")
+
+        # initialize the robot
+        self.rev_digit = robotpy_rev_digit.RevDigitBoard()
         self.timer = wpilib.Timer()
         self.robot = wpilib.RobotController
 
-    def autonomousInit(self):
-        """This function is run once each time the robot enters autonomous mode."""
-        pass
-
-    def autonomousPeriodic(self):
-        """This function is called periodically during autonomous."""
+    def robotPeriodic(self):
+        """This function is called periodically regardless of the robot's state"""
         pass
 
     def teleopInit(self):
-        """This function is called periodically during operator control."""
+        """This function is run once each time the robot enters teleop mode."""
         self.timer.start()
 
     def teleopPeriodic(self):
-        """This function is called periodically during autonomous."""
+        """This function is called periodically during autonomous mode."""
         time = self.timer.get()
         idx = int(time // 1) % len(TEST_PATTERN)
         text = TEST_PATTERN[idx:]
@@ -38,15 +47,17 @@ class MyRobot(wpilib.TimedRobot):
         # If neither button is pressed, show the timer
         if self.rev_digit.button_a and self.rev_digit.button_b:
             self.rev_digit.display_message(time)
+
         # If Button A is pressed, display the battery voltage
         elif not self.rev_digit.button_a:
             self.rev_digit.display_message(voltage)
+
         # If Button B is pressed, display the test pattern
         elif not self.rev_digit.button_b:
             self.rev_digit.display_message(text)
 
     def teleopExit(self):
-        """This function is called when teleop ends."""
+        """This function is called when teleop mode ends."""
         self.timer.stop()
 
     def disabledPeriodic(self):

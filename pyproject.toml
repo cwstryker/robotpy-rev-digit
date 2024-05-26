@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
@@ -31,7 +31,10 @@ Issues = "https://github.com/cwstryker/robotpy-rev-digit/issues"
 Source = "https://github.com/cwstryker/robotpy-rev-digit"
 
 [tool.hatch.version]
-path = "src/robotpy_rev_digit/__about__.py"
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/robotpy_rev_digit/__version__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
