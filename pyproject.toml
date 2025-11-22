@@ -23,7 +23,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
-dependencies = ["robotpy>=2024.1.1.3"]
+dependencies = ["robotpy>=2025.3.2.2"]
 
 [project.urls]
 Documentation = "https://github.com/cwstryker/robotpy-rev-digit#readme"
