@@ -1,14 +1,15 @@
 import inspect
 
-import robotpy_rev_digit
 import wpilib
+import wpilib.simulation
+
+import robotpy_rev_digit
 
 I2C_DEV_ADDR = 0x70
 TEST_PATTERN = "   ABCDEFGHIJKLMNOPQRSTUVWXYZ*?@#   "
 
 
 class MyRobot(wpilib.TimedRobot):
-
     """
     ##########################################################################
     RevDigitBoard Example Program
@@ -38,7 +39,7 @@ class MyRobot(wpilib.TimedRobot):
         self.timer.start()
 
     def teleopPeriodic(self):
-        """This function is called periodically during autonomous mode."""
+        """This function is called periodically during teleop mode."""
         time = self.timer.get()
         idx = int(time // 1) % len(TEST_PATTERN)
         text = TEST_PATTERN[idx:]
@@ -64,6 +65,14 @@ class MyRobot(wpilib.TimedRobot):
         """This function is called periodically when the robot is disabled"""
         voltage = self.robot.getBatteryVoltage()
         self.rev_digit.display_message(voltage)
+
+    def _simulationInit(self):
+        """This function is run once each time the robot enters simulation mode."""
+        self.rev_digit = robotpy_rev_digit.SimDigitBoard()
+
+    def _simulationPeriodic(self):
+        """This function is called periodically during simulation mode."""
+        self.rev_digit.update_simulation()
 
 
 if __name__ == "__main__":
