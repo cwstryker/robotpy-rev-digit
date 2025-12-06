@@ -2,8 +2,7 @@ import pytest
 import wpilib
 from wpilib.simulation import AnalogInputSim, DIOSim
 
-from robotpy_rev_digit.rev_digit_board import (RevDigitBoard, format_float,
-                                               format_string)
+from robotpy_rev_digit.rev_digit_board import RevDigitBoard, format_float, format_string
 
 
 class I2CSim:
@@ -19,7 +18,7 @@ class I2CSim:
         return self._buffer
 
 
-def test_RevDigit_Instance():
+def test_rev_digit_instance():
     """Test that a RevDigit object can be created"""
     digit = RevDigitBoard()
     assert isinstance(digit, RevDigitBoard)
@@ -30,7 +29,7 @@ def test_RevDigit_Instance():
 
 
 @pytest.mark.parametrize("state", [True, False])
-def test_RevDigit_button_a(state):
+def test_rev_digit_button_a(state):
     """Test reading the state of Button A"""
     digit = RevDigitBoard()
     button_a = DIOSim(input=digit._button_a)
@@ -41,7 +40,7 @@ def test_RevDigit_button_a(state):
 
 
 @pytest.mark.parametrize("state", [True, False])
-def test_RevDigit_button_b(state):
+def test_rev_digit_button_b(state):
     """Test reading the state of Button B"""
     digit = RevDigitBoard()
     button_a = DIOSim(input=digit._button_a)
@@ -52,7 +51,7 @@ def test_RevDigit_button_b(state):
 
 
 @pytest.mark.parametrize("voltage", [0.0, 1.0, 3.3, 5.0])
-def test_RevDigit_potentiometer(voltage):
+def test_rev_digit_potentiometer(voltage):
     """Test reading the state of the potentiometer sensor"""
     digit = RevDigitBoard()
     potentiometer = AnalogInputSim(analogInput=digit._potentiometer)
@@ -60,26 +59,26 @@ def test_RevDigit_potentiometer(voltage):
     assert digit.potentiometer == voltage
 
 
-def test_RevDigit_clear_display():
+def test_rev_digit_clear_display():
     """Test that display can be cleared"""
     digit = RevDigitBoard()
     digit._i2c = I2CSim(i2c_obj=digit._i2c)  # Use a simulated I2C interface
     digit.clear_display()
-    expected_packets = [b"\x0F\x0F\x00\x00\x00\x00\x00\x00\x00\x00"]
+    expected_packets = [b"\x0f\x0f\x00\x00\x00\x00\x00\x00\x00\x00"]
     for actual, expected in zip(digit._i2c.buffer, expected_packets):
         assert actual == expected
 
 
-def test_RevDigit_display_init():
+def test_rev_digit_display_init():
     """Test initializing the display"""
     digit = RevDigitBoard()
     digit._i2c = I2CSim(i2c_obj=digit._i2c)  # Use a simulated I2C interface
     digit._init_display()
     expected_packets = [
         b"\x21",
-        b"\xEF",
+        b"\xef",
         b"\x81",
-        b"\x0F\x0F\x00\x00\x00\x00\x00\x00\x00\x00",
+        b"\x0f\x0f\x00\x00\x00\x00\x00\x00\x00\x00",
     ]
     for actual, expected in zip(digit._i2c.buffer, expected_packets):
         assert actual == expected
@@ -88,12 +87,12 @@ def test_RevDigit_display_init():
 @pytest.mark.parametrize(
     "test_input,expected",
     [
-        ("A", b"\x0F\x0F\xF7\x00\x00\x00\x00\x00\x00\x00"),
-        (0, b"\x0F\x0F\x3F\x00\x00\x00\x00\x00\x00\x00"),
-        (0.1, b"\x0F\x0F\x06\x00\x3F\x40\x00\x00\x00\x00"),
+        ("A", b"\x0f\x0f\xf7\x00\x00\x00\x00\x00\x00\x00"),
+        (0, b"\x0f\x0f\x3f\x00\x00\x00\x00\x00\x00\x00"),
+        (0.1, b"\x0f\x0f\x06\x00\x3f\x40\x00\x00\x00\x00"),
     ],
 )
-def test_RevDigit_write_message(test_input, expected):
+def test_rev_digit_write_message(test_input, expected):
     """Test that display can display message"""
     digit = RevDigitBoard()
     digit._i2c = I2CSim(i2c_obj=digit._i2c)  # Use a simulated I2C interface
@@ -117,7 +116,7 @@ def test_RevDigit_write_message(test_input, expected):
         (-100.0, "####"),
     ],
 )
-def test_RevDigit_format_float(test_input, expected):
+def test_rev_digit_format_float(test_input, expected):
     assert format_float(test_input) == expected
 
 
@@ -132,5 +131,5 @@ def test_RevDigit_format_float(test_input, expected):
         ("a", "   A"),
     ],
 )
-def test_RevDigit_format_string(test_input, expected):
+def test_rev_digit_format_string(test_input, expected):
     assert format_string(test_input) == expected
