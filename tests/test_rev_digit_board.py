@@ -1,8 +1,7 @@
 import pytest
 import wpilib
-from wpilib.simulation import AnalogInputSim, DIOSim
-
 from robotpy_rev_digit.rev_digit_board import RevDigitBoard, format_float, format_string
+from wpilib.simulation import AnalogInputSim, DIOSim
 
 
 class I2CSim:
@@ -29,25 +28,25 @@ def test_rev_digit_instance():
 
 
 @pytest.mark.parametrize("state", [True, False])
-def test_rev_digit_button_a(state):
+def test_rev_digit_is_button_a_pressed(state):
     """Test reading the state of Button A"""
     digit = RevDigitBoard()
     button_a = DIOSim(input=digit._button_a)
     button_b = DIOSim(input=digit._button_b)
     button_a.setValue(state)
     button_b.setValue(not state)
-    assert digit.button_a is state
+    assert digit.is_button_a_pressed is not state
 
 
 @pytest.mark.parametrize("state", [True, False])
-def test_rev_digit_button_b(state):
+def test_rev_digit_is_button_b_pressed(state):
     """Test reading the state of Button B"""
     digit = RevDigitBoard()
     button_a = DIOSim(input=digit._button_a)
     button_b = DIOSim(input=digit._button_b)
     button_a.setValue(not state)
     button_b.setValue(state)
-    assert digit.button_b is state
+    assert digit.is_button_b_pressed is not state
 
 
 @pytest.mark.parametrize("voltage", [0.0, 1.0, 3.3, 5.0])
@@ -56,7 +55,7 @@ def test_rev_digit_potentiometer(voltage):
     digit = RevDigitBoard()
     potentiometer = AnalogInputSim(analogInput=digit._potentiometer)
     potentiometer.setVoltage(voltage)
-    assert digit.potentiometer == voltage
+    assert digit.potentiometer_voltage == voltage
 
 
 def test_rev_digit_clear_display():

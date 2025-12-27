@@ -1,7 +1,6 @@
-from typing import Protocol
-
-import wpilib
 import ntcore
+import wpilib
+import wpilib.simulation
 
 I2C_DEV_ADDR = 0x70
 BUTTON_A_PORT = 19
@@ -91,24 +90,6 @@ MAX_POT_LIMIT = 5.0
 MIN_POT_LIMIT = 0.0
 
 
-class DigitBoard(Protocol):
-
-    @property
-    def button_a_pressed(self) -> bool: ...
-
-    @property
-    def button_b_pressed(self) -> bool: ...
-
-    @property
-    def potentiometer(self) -> float: ...
-
-    def display_message(self, message: str): ...
-
-    def clear_display(self): ...
-
-    def update_simulation(self): ...
-
-
 def format_float(number: float) -> str:
     """Convert a float into a string with four digits max and one decimal digit"""
     rounded = round(number, 1)  # round the number to one decimal digit
@@ -124,41 +105,36 @@ def format_string(message: str) -> str:
     return f"{str(message)[:4].upper():>4}"
 
 
-class RevDigitBoard(DigitBoard):
+class RevDigitBoard:
     def __init__(self):
-        self._i2c = wpilib.I2C(wpilib.I2C.Port.kMXP, I2C_DEV_ADDR)
         self._button_a = wpilib.DigitalInput(BUTTON_A_PORT)
         self._button_b = wpilib.DigitalInput(BUTTON_B_PORT)
         self._potentiometer = wpilib.AnalogInput(POT_PORT)
+        self._sim_button_a = wpilib.simulation.DIOSim(self._button_a)
+        self._sim_button_b = wpilib.simulation.DIOSim(self._button_b)
+        self._sim_potentiometer = wpilib.simulation.AnalogInputSim(self._potentiometer)
+        self._i2c = wpilib.I2C(wpilib.I2C.Port.kMXP, I2C_DEV_ADDR)
+        self._display_text = ""
         self._init_display()
 
-    @property
-    def button_a_pressed(self) -> bool:
-        return self._button_a.get()
-
-    @property
-    def button_b_pressed(self) -> bool:
-        return self._button_b.get()
-
-    @property
-    def potentiometer(self) -> float:
-        return self._potentiometer.getVoltage()
-
-    def display_message(self, message: str | float) -> None:
-        """Display the provided value on the digit board"""
-        if isinstance(message, float):
-            self._display_float(message)
-        else:
-            self._display_string(message)
-
-    def clear_display(self) -> None:
-        """Clear the display"""
-        self._write_display(b"\x00\x00\x00\x00\x00\x00\x00\x00")
-
-    def _write_display(self, data: bytes) -> None:
-        """Write a display update command using the specified segment data"""
-        buffer = b"\x0f\x0f" + data
-        self._i2c.writeBulk(buffer)
+        # Set up the network tables interface
+        default_nt = ntcore.NetworkTableInstance.getDefault()
+        default_nt.getTable("REV Digit")
+        self.entry_button_a = default_nt.getBooleanTopic(
+            "/REV Digit/Button A Pressed"
+        ).getEntry(not self._button_a.get())
+        self.entry_button_b = default_nt.getBooleanTopic(
+            "/REV Digit/Button B Pressed"
+        ).getEntry(not self._button_b.get())
+        self.entry_pot = default_nt.getDoubleTopic(
+            "/REV Digit/Potentiometer Voltage"
+        ).getEntry(self._potentiometer.getVoltage())
+        self.pub_display = default_nt.getStringTopic("/REV Digit/Display").getEntry(
+            self._display_text
+        )
+        self.entry_button_a.setDefault(not self._button_a.get())
+        self.entry_button_b.setDefault(not self._button_b.get())
+        self.entry_pot.setDefault(self._potentiometer.getVoltage())
 
     def _init_display(self):
         """Initialize the display"""
@@ -167,6 +143,15 @@ class RevDigitBoard(DigitBoard):
         self._i2c.writeBulk(b"\xef")  # Set to full brightness
         self._i2c.writeBulk(b"\x81")  # Turn on display, no blinking
         self.clear_display()
+
+    def _write_display(self, data: bytes) -> None:
+        """Write a display update command using the specified segment data"""
+        buffer = b"\x0f\x0f" + data
+        self._i2c.writeBulk(buffer)
+
+    def _get_display_message(self) -> str:
+        """Get the display message (used by during simulation only)"""
+        return self._display_text
 
     def _display_float(self, message: float) -> None:
         """Display a floating point value to the display as a fixed point number"""
@@ -195,62 +180,42 @@ class RevDigitBoard(DigitBoard):
                 buf = b"\xff\xff" + buf  # Unsupported characters are left blank
         self._write_display(buf)
 
-
-class SimDigitBoard(DigitBoard):
-    def __init__(self):
-        self._button_a = True
-        self._button_b = True
-        self._pot = 0.0
-        self._text = ""
-
-        # Setup the network tables interface
-        default_nt = ntcore.NetworkTableInstance.getDefault()
-        default_nt.getTable("REV Digit")
-        self.entry_button_a = default_nt.getBooleanTopic("/REV Digit/Button A Pressed").getEntry(not self._button_a)
-        self.entry_button_b = default_nt.getBooleanTopic("/REV Digit/Button B Pressed").getEntry(not self._button_b)
-        self.entry_pot = default_nt.getDoubleTopic("/REV Digit/Potentiometer Voltage").getEntry(self._pot)
-        self.pub_display = default_nt.getStringTopic("/REV Digit/Display").getEntry(self._text)
-        self.entry_button_a.setDefault(not self._button_a)
-        self.entry_button_b.setDefault(not self._button_b)
-        self.entry_pot.setDefault(self._pot)
-
+    @property
+    def is_button_a_pressed(self):
+        """Returns True if Button A is pressed"""
+        return not self._button_a.get()
 
     @property
-    def button_a_pressed(self):
-        return not self._button_a
-
-    @button_a_pressed.setter
-    def button_a_pressed(self, value: bool):
-        self._button_a = not value
+    def is_button_b_pressed(self):
+        """Returns True if Button B is pressed"""
+        return not self._button_b.get()
 
     @property
-    def button_b_pressed(self):
-        return not self._button_b
+    def potentiometer_voltage(self) -> float:
+        """Returns the potentiometer voltage"""
+        return self._potentiometer.getVoltage()
 
-    @button_b_pressed.setter
-    def button_b_pressed(self, value: bool):
-        self._button_b = not value
-
-    @property
-    def potentiometer(self) -> float:
-        return self._pot
-
-    @potentiometer.setter
-    def potentiometer(self, value: float):
-        self._pot = max(min(value, MAX_POT_LIMIT), MIN_POT_LIMIT)
-
-    def display_message(self, message: str | float):
-        self._text = str(message)[:4]
-
-    def get_display_message(self) -> str:
-        return self._text
+    def display_message(self, message: str | float) -> None:
+        """Display the provided value on the digit board"""
+        self._display_text = str(message)[:4]
+        if isinstance(message, float):
+            self._display_float(message)
+        else:
+            self._display_string(message)
 
     def clear_display(self):
-        self._text = ""
+        """Clears the display"""
+        if wpilib.RobotBase.isSimulation():
+            self._display_text = ""
+        else:
+            self._write_display(b"\x00\x00\x00\x00\x00\x00\x00\x00")
 
     def update_simulation(self):
         """Update the simulation state"""
-        self._button_a = not self.entry_button_a.get()
-        self._button_b = not self.entry_button_b.get()
-        self.potentiometer = self.entry_pot.get()
-        self.pub_display.set(self.get_display_message())
+        self._sim_button_a.setValue(not self.entry_button_a.get())
+        self._sim_button_b.setValue(not self.entry_button_b.get())
+        self._sim_potentiometer.setVoltage(
+            max(min(self.entry_pot.get(), MAX_POT_LIMIT), MIN_POT_LIMIT)
+        )
+        if wpilib.RobotBase.isSimulation():
+            self.pub_display.set(self._get_display_message())
