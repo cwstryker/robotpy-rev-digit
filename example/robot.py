@@ -47,15 +47,15 @@ class MyRobot(wpilib.TimedRobot):
         voltage = self.rev_digit.potentiometer
 
         # If neither button is pressed, show the timer
-        if self.rev_digit.button_a and self.rev_digit.button_b:
+        if (not self.rev_digit.button_a_pressed) and (not self.rev_digit.button_b_pressed):
             self.rev_digit.display_message(time)
 
         # If Button A is pressed, display the battery voltage
-        elif not self.rev_digit.button_a:
+        elif self.rev_digit.button_a_pressed:
             self.rev_digit.display_message(voltage)
 
         # If Button B is pressed, display the test pattern
-        elif not self.rev_digit.button_b:
+        elif self.rev_digit.button_b_pressed:
             self.rev_digit.display_message(text)
 
     def teleopExit(self):

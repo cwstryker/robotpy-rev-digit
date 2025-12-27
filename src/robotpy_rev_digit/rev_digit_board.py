@@ -94,10 +94,10 @@ MIN_POT_LIMIT = 0.0
 class DigitBoard(Protocol):
 
     @property
-    def button_a(self) -> bool: ...
+    def button_a_pressed(self) -> bool: ...
 
     @property
-    def button_b(self) -> bool: ...
+    def button_b_pressed(self) -> bool: ...
 
     @property
     def potentiometer(self) -> float: ...
@@ -133,11 +133,11 @@ class RevDigitBoard(DigitBoard):
         self._init_display()
 
     @property
-    def button_a(self) -> bool:
+    def button_a_pressed(self) -> bool:
         return self._button_a.get()
 
     @property
-    def button_b(self) -> bool:
+    def button_b_pressed(self) -> bool:
         return self._button_b.get()
 
     @property
@@ -216,20 +216,20 @@ class SimDigitBoard(DigitBoard):
 
 
     @property
-    def button_a(self):
-        return self._button_a
+    def button_a_pressed(self):
+        return not self._button_a
 
-    @button_a.setter
-    def button_a(self, value: bool):
-        self._button_a = value
+    @button_a_pressed.setter
+    def button_a_pressed(self, value: bool):
+        self._button_a = not value
 
     @property
-    def button_b(self):
-        return self._button_b
+    def button_b_pressed(self):
+        return not self._button_b
 
-    @button_b.setter
-    def button_b(self, value: bool):
-        self._button_b = value
+    @button_b_pressed.setter
+    def button_b_pressed(self, value: bool):
+        self._button_b = not value
 
     @property
     def potentiometer(self) -> float:
@@ -250,7 +250,7 @@ class SimDigitBoard(DigitBoard):
 
     def update_simulation(self):
         """Update the simulation state"""
-        self.button_a = self.entry_button_a.get()
-        self.button_b = self.entry_button_b.get()
+        self._button_a = not self.entry_button_a.get()
+        self._button_b = not self.entry_button_b.get()
         self.potentiometer = self.entry_pot.get()
         self.pub_display.set(self.get_display_message())
