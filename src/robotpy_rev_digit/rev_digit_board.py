@@ -1,7 +1,7 @@
 from typing import Protocol
 
 import wpilib
-from wpilib.shuffleboard import Shuffleboard
+import ntcore
 
 I2C_DEV_ADDR = 0x70
 BUTTON_A_PORT = 19
@@ -202,11 +202,18 @@ class SimDigitBoard(DigitBoard):
         self._button_b = True
         self._pot = 0.0
         self._text = ""
-        self.tab = Shuffleboard.getTab("REV Digit")
-        self.tab_button_a = self.tab.add("Button A", self._button_a).getEntry()
-        self.tab_button_b = self.tab.add("Button B", self._button_b).getEntry()
-        self.tab_pot = self.tab.add("Potentiometer", self._pot).getEntry()
-        self.tab_display = self.tab.add("Display", self._text).getEntry()
+
+        # Setup the network tables interface
+        default_nt = ntcore.NetworkTableInstance.getDefault()
+        default_nt.getTable("REV Digit")
+        self.entry_button_a = default_nt.getBooleanTopic("/REV Digit/Button A Pressed").getEntry(not self._button_a)
+        self.entry_button_b = default_nt.getBooleanTopic("/REV Digit/Button B Pressed").getEntry(not self._button_b)
+        self.entry_pot = default_nt.getDoubleTopic("/REV Digit/Potentiometer Voltage").getEntry(self._pot)
+        self.pub_display = default_nt.getStringTopic("/REV Digit/Display").getEntry(self._text)
+        self.entry_button_a.setDefault(not self._button_a)
+        self.entry_button_b.setDefault(not self._button_b)
+        self.entry_pot.setDefault(self._pot)
+
 
     @property
     def button_a(self):
@@ -242,7 +249,8 @@ class SimDigitBoard(DigitBoard):
         self._text = ""
 
     def update_simulation(self):
-        self.button_a = self.tab_button_a.getBoolean(self.button_a)
-        self.button_b = self.tab_button_b.getBoolean(self.button_b)
-        self.potentiometer = self.tab_pot.getDouble(self.potentiometer)
-        self.tab_display.setString(str(self.get_display_message()))
+        """Update the simulation state"""
+        self.button_a = self.entry_button_a.get()
+        self.button_b = self.entry_button_b.get()
+        self.potentiometer = self.entry_pot.get()
+        self.pub_display.set(self.get_display_message())
