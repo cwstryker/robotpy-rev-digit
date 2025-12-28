@@ -39,7 +39,6 @@ class MyRobot(wpilib.TimedRobot):
     This program is an example of how to use the RevDigitBoard class.
     """
 
-    # noinspection PyAttributeOutsideInit
     def robotInit(self):
         """
         This function is called upon program startup and should be used for any
