@@ -202,6 +202,7 @@ class RevDigitBoard:
             self._display_float(message)
         else:
             self._display_string(message)
+        self.pub_display.set(self._get_display_message())
 
     def clear_display(self):
         """Clears the display"""
@@ -210,12 +211,13 @@ class RevDigitBoard:
         else:
             self._write_display(b"\x00\x00\x00\x00\x00\x00\x00\x00")
 
-    def update_simulation(self):
-        """Update the simulation state"""
+    def update(self):
+        """Update network tables and the simulation state"""
         self._sim_button_a.setValue(not self.entry_button_a.get())
         self._sim_button_b.setValue(not self.entry_button_b.get())
         self._sim_potentiometer.setVoltage(
             max(min(self.entry_pot.get(), MAX_POT_LIMIT), MIN_POT_LIMIT)
         )
-        if wpilib.RobotBase.isSimulation():
-            self.pub_display.set(self._get_display_message())
+        self.entry_button_a.set(self.is_button_a_pressed)
+        self.entry_button_b.set(self.is_button_b_pressed)
+        self.entry_pot.set(self.potentiometer_voltage)

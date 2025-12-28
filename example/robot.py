@@ -2,7 +2,6 @@ import inspect
 
 import robotpy_rev_digit
 import wpilib
-import wpilib.simulation
 from robotpy_rev_digit import RevDigitBoard
 
 I2C_DEV_ADDR = 0x70
@@ -33,7 +32,7 @@ class MyRobot(wpilib.TimedRobot):
 
     def robotPeriodic(self):
         """This function is called periodically regardless of the robot's state"""
-        self.rev_digit.update_simulation()
+        self.rev_digit.update()
 
     def teleopInit(self):
         """This function is run once each time the robot enters teleop mode."""
