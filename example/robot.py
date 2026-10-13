@@ -1,9 +1,8 @@
 import inspect
 
-import wpilib
-import wpilib.simulation
-
 import robotpy_rev_digit
+import wpilib
+from robotpy_rev_digit import RevDigitBoard
 
 I2C_DEV_ADDR = 0x70
 TEST_PATTERN = "   ABCDEFGHIJKLMNOPQRSTUVWXYZ*?@#   "
@@ -16,6 +15,7 @@ class MyRobot(wpilib.TimedRobot):
     This program is an example of how to use the RevDigitBoard class.
     """
 
+    # noinspection PyAttributeOutsideInit
     def robotInit(self):
         """
         This function is called upon program startup and should be used for any
@@ -26,13 +26,13 @@ class MyRobot(wpilib.TimedRobot):
         print(f"robotpy_rev_digit version: {robotpy_rev_digit.__version__}")
 
         # initialize the robot
-        self.rev_digit = robotpy_rev_digit.RevDigitBoard()
         self.timer = wpilib.Timer()
         self.robot = wpilib.RobotController
+        self.rev_digit = RevDigitBoard()
 
     def robotPeriodic(self):
         """This function is called periodically regardless of the robot's state"""
-        pass
+        self.rev_digit.update()
 
     def teleopInit(self):
         """This function is run once each time the robot enters teleop mode."""
@@ -43,18 +43,20 @@ class MyRobot(wpilib.TimedRobot):
         time = self.timer.get()
         idx = int(time // 1) % len(TEST_PATTERN)
         text = TEST_PATTERN[idx:]
-        voltage = self.rev_digit.potentiometer
+        voltage = self.rev_digit.potentiometer_voltage
 
         # If neither button is pressed, show the timer
-        if self.rev_digit.button_a and self.rev_digit.button_b:
+        if (not self.rev_digit.is_button_a_pressed) and (
+            not self.rev_digit.is_button_b_pressed
+        ):
             self.rev_digit.display_message(time)
 
         # If Button A is pressed, display the battery voltage
-        elif not self.rev_digit.button_a:
+        elif self.rev_digit.is_button_a_pressed:
             self.rev_digit.display_message(voltage)
 
         # If Button B is pressed, display the test pattern
-        elif not self.rev_digit.button_b:
+        elif self.rev_digit.is_button_b_pressed:
             self.rev_digit.display_message(text)
 
     def teleopExit(self):
@@ -65,15 +67,3 @@ class MyRobot(wpilib.TimedRobot):
         """This function is called periodically when the robot is disabled"""
         voltage = self.robot.getBatteryVoltage()
         self.rev_digit.display_message(voltage)
-
-    def _simulationInit(self):
-        """This function is run once each time the robot enters simulation mode."""
-        self.rev_digit = robotpy_rev_digit.SimDigitBoard()
-
-    def _simulationPeriodic(self):
-        """This function is called periodically during simulation mode."""
-        self.rev_digit.update_simulation()
-
-
-if __name__ == "__main__":
-    wpilib.run(MyRobot)
